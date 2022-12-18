@@ -8,14 +8,20 @@ class CalendarsController < ApplicationController
 
   # 予定の保存
   def create
+    # Plan.createをコンソールで実行すると、データベースにデータを保存できたので、
+    # Plan.createは問題なく設定できていると思われる。では(plan_params)は？
     Plan.create(plan_params)
     redirect_to action: :index
   end
 
   private
 
-  def plan_params
-    params.require(:calendars).permit(:date, :plan)
+  # require(:calendars)ではなく、require(:plans)では？それかrequire(:plan)?
+  # require(モデル名)　では、モデル名は何？
+  # モデル名の命名規則は単数形。なら、モデル名はplanか？
+  # require(:calendars)=>require(:plan)に変更したところ、データの保存成功。
+    def plan_params
+    params.require(:plan).permit(:date, :plan)
   end
 
   def get_week
@@ -34,7 +40,13 @@ class CalendarsController < ApplicationController
       plans.each do |plan|
         today_plans.push(plan.plan) if plan.date == @todays_date + x
       end
-      days = { month: (@todays_date + x).month, date: (@todays_date+x).day, :plans => today_plans}
+
+      wday_num = Date.today.wday # wdayメソッドが用いて取得した数値
+      if wday_num > 7 # 「wday_numが７以上の場合」という条件式
+        wday_num = wday_num -7
+      end
+
+      days = { month: (@todays_date + x).month, date: (@todays_date+x).day, plans: today_plans, wday: wdays[wday_num]}
       @week_days.push(days)
     end
 
